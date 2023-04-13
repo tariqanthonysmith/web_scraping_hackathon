@@ -8,22 +8,20 @@ make_list = ["samsung", "lg", "tcl", "hisense",
 size_pattern = r"[\d]{2}\"|[\d]{2}\s(inch)"
 price_pattern = r"£[0-9\,]+\.[0-9]{2}"
 
-ebay_text = []
-
 
 def prepare_data(products):
     site = []
     make = []
-    conditionZ = []
+    condition = []
     priceZ = []
     for product in products:
         make.append(product[0])
         site.append(product[4])
-        conditionZ.append(product[3])
+        condition.append(product[3])
         priceZ.append(product[2])
         dict = {"Make": make,
                 "Site": site,
-                "Condition": conditionZ,
+                "Condition": condition,
                 "Price": priceZ,
                 }
         df = pd.DataFrame(dict)
@@ -57,45 +55,47 @@ def make_match(web_text):
 
 
 # Set headers to mimic a web browser
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
 
-for page in range(1, 2):
+def web_scrap():
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
 
-    # URL of the Amazon page you want to scrape
-    amazon_url = f'https://www.amazon.co.uk/s?k=65+inch+tv&page={page}&crid=3Q9RHHJ0DH71W&qid=1681383218&sprefix=65+inch%2Caps%2C494&ref=sr_pg_1'
+    for page in range(1, 2):
 
-    # Make a request to the Amazon page and get its HTML content
-    amazon_response = requests.get(amazon_url, headers=headers)
+        # URL of the Amazon page you want to scrape
+        amazon_url = f'https://www.amazon.co.uk/s?k=65+inch+tv&page={page}&crid=3Q9RHHJ0DH71W&qid=1681383218&sprefix=65+inch%2Caps%2C494&ref=sr_pg_1'
 
-    # Create an empty list to store products
-    products = []
+        # Make a request to the Amazon page and get its HTML content
+        amazon_response = requests.get(amazon_url, headers=headers)
 
-    # Check if the requests were successful
-    if amazon_response.status_code == 200:
+        # Create an empty list to store products
+        products = []
 
-        # Parse the HTML content using BeautifulSoup
-        amazon_soup = BeautifulSoup(amazon_response.content, 'html.parser')
+        # Check if the requests were successful
+        if amazon_response.status_code == 200:
 
-        # Extract the information you need from the Amazon page
-        amazon_products = amazon_soup.find_all(
-            'div', {'class': 's-result-item'})
-        for product in amazon_products:
-            try:
-                name = product.find('h2').text.strip().lower()
-                if '65 inch' not in name:
-                    continue
-                price = product.find('span', {'class': 'a-price'}).text.strip()
-                condition = 'new'
+            # Parse the HTML content using BeautifulSoup
+            amazon_soup = BeautifulSoup(amazon_response.content, 'html.parser')
 
-                products.append([name, price, condition])
-                # Do something with the extracted information
-                # print(f"Amazon: {name}, {price}, {condition}")
-            except AttributeError:
-                name = ""
+            # Extract the information you need from the Amazon page
+            amazon_products = amazon_soup.find_all(
+                'div', {'class': 's-result-item'})
+            for product in amazon_products:
+                try:
+                    name = product.find('h2').text.strip().lower()
+                    if '65 inch' not in name:
+                        continue
+                    price = product.find('span', {'class': 'a-price'}).text.strip()
+                    condition = 'new'
 
-        print(make_match(products))
-        prepare_data(make_match(products))
+                    products.append([name, price, condition])
+                    # Do something with the extracted information
+                    # print(f"Amazon: {name}, {price}, {condition}")
+                except AttributeError:
+                    name = ""
 
-    else:
-        print("Error making requests to Amazon")
+            print(make_match(products))
+            prepare_data(make_match(products))
+
+        else:
+            print("Error making requests to Amazon")
